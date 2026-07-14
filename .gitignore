@@ -1,0 +1,53 @@
+# Compiled Expert Advisors & Indicators
+*.ex5
+*.ex4
+*.dll
+
+# MetaTrader Terminal Files
+*.log
+*.ini
+*.dat
+*.fxt
+*.hst
+
+# MetaEditor Cache & Backups
+*.bak
+*.backup
+*~
+*.tmp
+
+# System & IDE Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*#
+.vscode/
+.idea/
+*.code-workspace
+
+# Build & Output
+bin/
+obj/
+build/
+dist/
+
+# Tester & Backtest Files
+tester/
+*.tst
+*.fxt
+
+# Environment & Config
+.env
+config.local.json
+
+# Node/npm (if using tools)
+node_modules/
+package-lock.json
+
+# History
+*.history
+
+# OS Files
+.DS_Store
+desktop.ini
