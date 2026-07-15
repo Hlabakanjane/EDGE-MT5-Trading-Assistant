@@ -18,13 +18,20 @@ bool InitializeDashboard()
     if(gDashboardCreated)
         return true;
     
+    LogMessage("Initializing Dashboard at (" + (string)DashboardX + ", " + (string)DashboardY + ")", "INFO");
+    
+    // Create background rectangle
+    CreateRectangle("EDGE_BG", DashboardX - 5, DashboardY - 5, 
+                    DashboardX + 800, DashboardY + (SYMBOL_COUNT * CellHeight) + 80,
+                    ColorBackground, 0);
+    
     // Create title label
     CreateLabel("EDGE_TITLE", "EDGE MT5 TRADING ASSISTANT - SCANNER v1.0",
-                DashboardX, DashboardY, ColorHeader, 12, "Arial");
+                DashboardX + 10, DashboardY + 5, ColorHeader, 12, "Arial Black");
     
     // Create column headers
-    int headerY = DashboardY + 30;
-    int colX[] = {DashboardX + 5, DashboardX + 100, DashboardX + 180, DashboardX + 260, 
+    int headerY = DashboardY + 35;
+    int colX[] = {DashboardX + 10, DashboardX + 100, DashboardX + 180, DashboardX + 260, 
                   DashboardX + 320, DashboardX + 380, DashboardX + 440, DashboardX + 520, 
                   DashboardX + 620, DashboardX + 720};
     string headers[] = {"SYMBOL", "PRICE", "EMA20", "D1", "H4", "H1", "M15", "SIGNAL", "SCORE", "RATING"};
@@ -32,8 +39,11 @@ bool InitializeDashboard()
     for(int i = 0; i < ArraySize(headers); i++)
     {
         CreateLabel("HEADER_" + (string)i, headers[i],
-                    colX[i], headerY, ColorHeader, 10, "Arial Bold");
+                    colX[i], headerY, ColorHeader, 10, "Arial Black");
     }
+    
+    // Create separator line
+    CreateLine("EDGE_SEP", DashboardX + 5, headerY + 18, DashboardX + 795, headerY + 18, ColorHeader, 1);
     
     // Create data labels for each symbol
     for(int i = 0; i < SYMBOL_COUNT; i++)
@@ -48,7 +58,50 @@ bool InitializeDashboard()
     }
     
     gDashboardCreated = true;
+    LogMessage("Dashboard initialized successfully", "INFO");
     return true;
+}
+
+//+------------------------------------------------------------------+
+//| Create Rectangle Object                                       |
+//+------------------------------------------------------------------+
+
+void CreateRectangle(const string name, int x1, int y1, int x2, int y2,
+                     color clr, int width)
+{
+    if(ObjectFind(ChartID(), name) >= 0)
+        ObjectDelete(ChartID(), name);
+    
+    ObjectCreate(ChartID(), name, OBJ_RECTANGLE_LABEL, 0, 0, 0);
+    ObjectSetInteger(ChartID(), name, OBJPROP_XDISTANCE, x1);
+    ObjectSetInteger(ChartID(), name, OBJPROP_YDISTANCE, y1);
+    ObjectSetInteger(ChartID(), name, OBJPROP_XSIZE, x2 - x1);
+    ObjectSetInteger(ChartID(), name, OBJPROP_YSIZE, y2 - y1);
+    ObjectSetInteger(ChartID(), name, OBJPROP_BGCOLOR, clr);
+    ObjectSetInteger(ChartID(), name, OBJPROP_BORDER_COLOR, ColorHeader);
+    ObjectSetInteger(ChartID(), name, OBJPROP_BORDER_WIDTH, width);
+    ObjectSetInteger(ChartID(), name, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+    ObjectSetInteger(ChartID(), name, OBJPROP_BACK, true);
+    ObjectSetInteger(ChartID(), name, OBJPROP_SELECTABLE, false);
+}
+
+//+------------------------------------------------------------------+
+//| Create Line Object                                            |
+//+------------------------------------------------------------------+
+
+void CreateLine(const string name, int x1, int y1, int x2, int y2,
+                color clr, int width)
+{
+    if(ObjectFind(ChartID(), name) >= 0)
+        ObjectDelete(ChartID(), name);
+    
+    ObjectCreate(ChartID(), name, OBJ_HLINE, 0, 0, 0);
+    ObjectSetInteger(ChartID(), name, OBJPROP_XDISTANCE, x1);
+    ObjectSetInteger(ChartID(), name, OBJPROP_YDISTANCE, y1);
+    ObjectSetInteger(ChartID(), name, OBJPROP_COLOR, clr);
+    ObjectSetInteger(ChartID(), name, OBJPROP_WIDTH, width);
+    ObjectSetInteger(ChartID(), name, OBJPROP_BACK, true);
+    ObjectSetInteger(ChartID(), name, OBJPROP_SELECTABLE, false);
 }
 
 //+------------------------------------------------------------------+
@@ -66,17 +119,22 @@ void CreateLabel(const string name, const string text, int x, int y,
         ObjectSetInteger(ChartID(), name, OBJPROP_YDISTANCE, y);
         ObjectSetInteger(ChartID(), name, OBJPROP_COLOR, clr);
         ObjectSetInteger(ChartID(), name, OBJPROP_FONTSIZE, fontSize);
+        ObjectSetString(ChartID(), name, OBJPROP_FONT, font);
         return;
     }
     
     // Create new label
-    ObjectCreate(ChartID(), name, OBJ_LABEL, 0, 0, 0);
-    ObjectSetString(ChartID(), name, OBJPROP_TEXT, text);
-    ObjectSetInteger(ChartID(), name, OBJPROP_XDISTANCE, x);
-    ObjectSetInteger(ChartID(), name, OBJPROP_YDISTANCE, y);
-    ObjectSetInteger(ChartID(), name, OBJPROP_COLOR, clr);
-    ObjectSetInteger(ChartID(), name, OBJPROP_FONTSIZE, fontSize);
-    ObjectSetString(ChartID(), name, OBJPROP_FONT, font);
+    if(ObjectCreate(ChartID(), name, OBJ_LABEL, 0, 0, 0))
+    {
+        ObjectSetString(ChartID(), name, OBJPROP_TEXT, text);
+        ObjectSetInteger(ChartID(), name, OBJPROP_XDISTANCE, x);
+        ObjectSetInteger(ChartID(), name, OBJPROP_YDISTANCE, y);
+        ObjectSetInteger(ChartID(), name, OBJPROP_COLOR, clr);
+        ObjectSetInteger(ChartID(), name, OBJPROP_FONTSIZE, fontSize);
+        ObjectSetString(ChartID(), name, OBJPROP_FONT, font);
+        ObjectSetInteger(ChartID(), name, OBJPROP_BACK, false);
+        ObjectSetInteger(ChartID(), name, OBJPROP_SELECTABLE, false);
+    }
 }
 
 //+------------------------------------------------------------------+
@@ -86,12 +144,15 @@ void CreateLabel(const string name, const string text, int x, int y,
 void UpdateDashboard(const MarketData &data[])
 {
     if(!gDashboardCreated)
-        return;
+    {
+        if(!InitializeDashboard())
+            return;
+    }
     
-    int colX[] = {DashboardX + 5, DashboardX + 100, DashboardX + 180, DashboardX + 260,
+    int colX[] = {DashboardX + 10, DashboardX + 100, DashboardX + 180, DashboardX + 260,
                   DashboardX + 320, DashboardX + 380, DashboardX + 440, DashboardX + 520,
                   DashboardX + 620, DashboardX + 720};
-    int headerY = DashboardY + 30;
+    int headerY = DashboardY + 35;
     
     for(int i = 0; i < ArraySize(data); i++)
     {
@@ -132,6 +193,8 @@ void UpdateDashboard(const MarketData &data[])
         // Rating
         UpdateLabel("DATA_" + (string)i + "_9", GetScoreRating(data[i].edgeScore), colX[9], rowY, GetScoreColor(data[i].edgeScore));
     }
+    
+    ChartRedraw();
 }
 
 //+------------------------------------------------------------------+
@@ -144,6 +207,8 @@ void UpdateLabel(const string name, const string text, int x, int y, color clr)
     {
         ObjectSetString(ChartID(), name, OBJPROP_TEXT, text);
         ObjectSetInteger(ChartID(), name, OBJPROP_COLOR, clr);
+        ObjectSetInteger(ChartID(), name, OBJPROP_XDISTANCE, x);
+        ObjectSetInteger(ChartID(), name, OBJPROP_YDISTANCE, y);
     }
 }
 
@@ -159,10 +224,34 @@ void CleanupDashboard()
             ObjectDelete(ChartID(), "EDGE_TITLE");
         if(ObjectFind(ChartID(), "HEADER_" + (string)i) >= 0)
             ObjectDelete(ChartID(), "HEADER_" + (string)i);
-        if(ObjectFind(ChartID(), "DATA_" + (string)i) >= 0)
-            ObjectDelete(ChartID(), "DATA_" + (string)i);
+        if(ObjectFind(ChartID(), "DATA_" + (string)i + "_0") >= 0)
+            ObjectDelete(ChartID(), "DATA_" + (string)i + "_0");
+        if(ObjectFind(ChartID(), "DATA_" + (string)i + "_1") >= 0)
+            ObjectDelete(ChartID(), "DATA_" + (string)i + "_1");
+        if(ObjectFind(ChartID(), "DATA_" + (string)i + "_2") >= 0)
+            ObjectDelete(ChartID(), "DATA_" + (string)i + "_2");
+        if(ObjectFind(ChartID(), "DATA_" + (string)i + "_3") >= 0)
+            ObjectDelete(ChartID(), "DATA_" + (string)i + "_3");
+        if(ObjectFind(ChartID(), "DATA_" + (string)i + "_4") >= 0)
+            ObjectDelete(ChartID(), "DATA_" + (string)i + "_4");
+        if(ObjectFind(ChartID(), "DATA_" + (string)i + "_5") >= 0)
+            ObjectDelete(ChartID(), "DATA_" + (string)i + "_5");
+        if(ObjectFind(ChartID(), "DATA_" + (string)i + "_6") >= 0)
+            ObjectDelete(ChartID(), "DATA_" + (string)i + "_6");
+        if(ObjectFind(ChartID(), "DATA_" + (string)i + "_7") >= 0)
+            ObjectDelete(ChartID(), "DATA_" + (string)i + "_7");
+        if(ObjectFind(ChartID(), "DATA_" + (string)i + "_8") >= 0)
+            ObjectDelete(ChartID(), "DATA_" + (string)i + "_8");
+        if(ObjectFind(ChartID(), "DATA_" + (string)i + "_9") >= 0)
+            ObjectDelete(ChartID(), "DATA_" + (string)i + "_9");
     }
+    if(ObjectFind(ChartID(), "EDGE_BG") >= 0)
+        ObjectDelete(ChartID(), "EDGE_BG");
+    if(ObjectFind(ChartID(), "EDGE_SEP") >= 0)
+        ObjectDelete(ChartID(), "EDGE_SEP");
+    
     gDashboardCreated = false;
+    LogMessage("Dashboard cleaned up", "INFO");
 }
 
 #endif
