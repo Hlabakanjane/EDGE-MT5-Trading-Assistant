@@ -21,8 +21,8 @@ input bool EnablePopupAlerts = true;      // Enable popup alerts
 //| DASHBOARD SETTINGS
 //+------------------------------------------------------------------+
 
-const int DashboardX = 20;                // Dashboard X position
-const int DashboardY = 20;                // Dashboard Y position
+const int DashboardX = 10;                // Dashboard X position
+const int DashboardY = 50;                // Dashboard Y position
 const int DashboardWidth = 1200;          // Dashboard width (pixels)
 const int DashboardHeight = 400;          // Dashboard height (pixels)
 const int CellHeight = 25;                // Row height
@@ -35,7 +35,7 @@ const int CellPadding = 5;                // Cell padding
 const color ColorBUY = clrLime;           // BUY signal color (Green)
 const color ColorSELL = clrRed;           // SELL signal color (Red)
 const color ColorWAIT = clrYellow;        // WAIT signal color (Yellow)
-const color ColorBG = clrBlack;           // Background color
+const color ColorBackground = clrDarkGray; // Dashboard background
 const color ColorHeader = clrWhite;       // Header text color
 const color ColorText = clrWhiteSmoke;    // Body text color
 const color ColorBorder = clrGray;        // Border color
